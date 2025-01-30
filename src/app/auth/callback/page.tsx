@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../../contexts/AuthContext";
 
-export default function AuthCallback() {
+// Moved the logic into a child component to wrap with Suspense
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setUser } = useAuth();
@@ -37,5 +38,14 @@ export default function AuthCallback() {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8811f0] mx-auto"></div>
       </div>
     </div>
+  );
+}
+
+// Parent component that adds the Suspense boundary
+export default function AuthCallback() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }
