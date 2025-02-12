@@ -1,87 +1,60 @@
 "use client";
 
+import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
-import { useAuth } from "../../../contexts/AuthContext";
 import AuthModal from "./AuthModal";
-import { useRouter } from "next/navigation";
+import { useAuth } from "../../../contexts/AuthContext";
 
 export default function Header() {
-  const router = useRouter();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const { user } = useAuth();
 
-  const openLoginModal = () => {
-    setAuthMode("login");
-    setIsAuthModalOpen(true);
-  };
-
-  const openSignupModal = () => {
-    setAuthMode("signup");
-    setIsAuthModalOpen(true);
-  };
-
   return (
-    <header className="fixed top-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm shadow-lg z-50">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center">
-          <span className="text-xl font-bold text-white">LearnLex</span>
-        </div>
+    <header className="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl bg-black/50 backdrop-blur-sm border border-white/10 rounded-2xl z-50">
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/vercel.svg" alt="Logo" width={32} height={32} />
+            <span className="font-bold text-xl text-white">LearnLex</span>
+          </Link>
 
-        {/* Navigation Links */}
-        <div className="hidden md:flex items-center space-x-8">
-          <a
-            href="#features"
-            className="text-gray-300 hover:text-white transition-colors"
-          >
-            Features
-          </a>
-          <a
-            href="#pricing"
-            className="text-gray-300 hover:text-white transition-colors"
-          >
-            Pricing
-          </a>
-          <a
-            href="#about"
-            className="text-gray-300 hover:text-white transition-colors"
-          >
-            About
-          </a>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          {user ? (
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="text-gray-300 hover:text-white transition-colors"
+          <nav className="hidden md:flex items-center gap-8">
+            <Link
+              href="#features"
+              className="text-white hover:text-[#ff6b00] transition-colors"
             >
-              Dashboard
-            </button>
-          ) : (
-            <>
+              Features
+            </Link>
+            <Link
+              href="#pricing"
+              className="text-white hover:text-[#ff6b00] transition-colors"
+            >
+              Pricing
+            </Link>
+            {user ? (
+              <Link href="/dashboard">
+                <button className="bg-[#ff6b00] text-white px-6 py-2 rounded-lg hover:bg-[#ff8533] transition-colors">
+                  Dashboard
+                </button>
+              </Link>
+            ) : (
               <button
-                onClick={openLoginModal}
-                className="text-gray-300 hover:text-white transition-colors"
+                onClick={() => setIsAuthModalOpen(true)}
+                className="bg-[#ff6b00] text-white px-6 py-2 rounded-lg hover:bg-[#ff8533] transition-colors"
               >
-                Log in
+                Get Started
               </button>
-              <button
-                onClick={openSignupModal}
-                className="bg-[#8811f0] text-white px-4 py-2 rounded-lg hover:bg-[#8811f0] transition-colors"
-              >
-                Sign up
-              </button>
-            </>
-          )}
+            )}
+          </nav>
         </div>
+      </div>
 
-        <AuthModal
-          isOpen={isAuthModalOpen}
-          onClose={() => setIsAuthModalOpen(false)}
-          mode={authMode}
-        />
-      </nav>
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        mode="signup"
+      />
     </header>
   );
 }

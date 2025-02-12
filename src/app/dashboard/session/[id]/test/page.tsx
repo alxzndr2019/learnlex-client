@@ -1,221 +1,187 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-
-interface Question {
-  id: number;
-  text: string;
-  choices: string[];
-  correctAnswer: number;
-  explanation: string;
-}
-
-const QuestionProgress = ({
-  current,
-  total,
-  score,
-}: {
-  current: number;
-  total: number;
-  score: number;
-}) => (
-  <div className="bg-white rounded-xl p-6 shadow-sm mb-8">
-    <div className="flex justify-between items-center">
-      <div className="space-y-1">
-        <p className="text-sm text-gray-500">Question</p>
-        <p className="text-2xl font-bold">
-          {current} <span className="text-gray-400">/ {total}</span>
-        </p>
-      </div>
-      <div className="space-y-1 text-right">
-        <p className="text-sm text-gray-500">Score</p>
-        <p className="text-2xl font-bold text-[#8811f0]">{score}%</p>
-      </div>
-    </div>
-    <div className="mt-4 h-2 bg-gray-100 rounded-full overflow-hidden">
-      <div
-        className="h-full bg-[#8811f0] rounded-full transition-all duration-500"
-        style={{ width: `${(current / total) * 100}%` }}
-      />
-    </div>
-  </div>
-);
-
-const ChoiceButton = ({
-  choice,
-  onClick,
-  status,
-}: {
-  choice: string;
-  onClick: () => void;
-  status?: "success" | "error" | "default";
-}) => {
-  const getStatusClasses = () => {
-    switch (status) {
-      case "success":
-        return "border-green-500 bg-green-50 text-green-700";
-      case "error":
-        return "border-red-500 bg-red-50 text-red-700";
-      default:
-        return "border-gray-200 hover:border-[#8811f0] hover:bg-[#8811f0]/5";
-    }
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full p-4 rounded-xl border-2 text-left transition-colors ${getStatusClasses()}`}
-    >
-      {choice}
-    </button>
-  );
-};
-
-const ExplanationAccordion = ({
-  explanation,
-  isVisible,
-}: {
-  explanation: string;
-  isVisible: boolean;
-}) =>
-  isVisible ? (
-    <div className="mt-8 p-6 bg-[#8811f0]/5 rounded-xl">
-      <h3 className="font-bold mb-2">Explanation</h3>
-      <p className="text-gray-600">{explanation}</p>
-    </div>
-  ) : null;
+import { useParams, useRouter } from "next/navigation";
+import Section from "../../../_components/Section";
+import { sessionApi } from "../../../../../store/api/sessionApi";
 
 export default function TestPage() {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
-  const [showExplanation, setShowExplanation] = useState(false);
+  const params = useParams();
+  const router = useRouter();
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [score, setScore] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
 
-  // Mock questions - replace with actual data
-  const questions: Question[] = [
+  const { data: testResults } = sessionApi.useGetTestResultsQuery(
+    params.id as string,
     {
-      id: 1,
-      text: "What's the output of console.log(typeof null)?",
-      choices: ['"null"', '"object"', '"undefined"', '"boolean"'],
-      correctAnswer: 1,
-      explanation:
-        'In JavaScript, typeof null returns "object". This is a known language quirk that has persisted for historical reasons.',
-    },
-    {
-      id: 2,
-      text: "Which of these is NOT a valid way to declare a variable in JavaScript?",
-      choices: ["let x = 5;", "const x = 5;", "var x = 5;", "variable x = 5;"],
-      correctAnswer: 3,
-      explanation:
-        "JavaScript has three ways to declare variables: var, let, and const. 'variable' is not a valid keyword.",
-    },
-    // Add more questions as needed
-  ];
+      skip: !isComplete,
+    }
+  );
 
-  const currentQuestion = questions[currentQuestionIndex];
-  const hasAnswered = selectedAnswers[currentQuestionIndex] !== undefined;
+  const [submitAnswer, { isLoading: isSubmitting }] =
+    sessionApi.useSubmitAnswerMutation();
+  const { data: session } = sessionApi.useGetSessionQuery(params.id as string);
 
-  const calculateScore = () => {
-    const correctAnswers = selectedAnswers.filter(
-      (answer, index) => answer === questions[index].correctAnswer
-    ).length;
-    return Math.round((correctAnswers / selectedAnswers.length) * 100) || 0;
-  };
+  if (!session) {
+    return (
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-white mb-4">
+          Session not found
+        </h1>
+        <p className="text-white/70 mb-8">
+          This session might have been deleted or doesn&apos;t exist.
+        </p>
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="bg-[#ff6b00] text-white px-6 py-3 rounded-lg hover:bg-[#ff8533] transition-colors"
+        >
+          Back to Dashboard
+        </button>
+      </div>
+    );
+  }
 
-  const handleAnswerSelect = (choiceIndex: number) => {
-    if (hasAnswered) return;
-
-    const newAnswers = [...selectedAnswers];
-    newAnswers[currentQuestionIndex] = choiceIndex;
-    setSelectedAnswers(newAnswers);
-    setShowExplanation(true);
+  const handleAnswerSelect = (index: number) => {
+    if (showFeedback) return;
+    setSelectedAnswer(index);
   };
 
   const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setShowExplanation(false);
+    if (selectedAnswer === null) return;
+
+    if (currentQuestion < session.questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      setSelectedAnswer(null);
+      setShowFeedback(false);
+    } else {
+      setIsComplete(true);
     }
   };
 
-  const handlePrevious = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-      setShowExplanation(true);
+  const handleCheck = async () => {
+    if (selectedAnswer === null) return;
+
+    try {
+      const result = await submitAnswer({
+        sessionId: session.id,
+        body: {
+          questionId: session.questions[currentQuestion].id,
+          answer: selectedAnswer,
+        },
+      }).unwrap();
+
+      if (result.correct) {
+        setScore(score + 1);
+      }
+      setShowFeedback(true);
+    } catch (error) {
+      console.error("Failed to submit answer:", error);
     }
   };
+
+  if (isComplete) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Section>
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-white mb-4">
+              Test Complete!
+            </h1>
+            <p className="text-xl text-white/70 mb-8">
+              You scored {score} out of {session.questions.length}
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 bg-[#ff6b00] text-white rounded-lg font-medium hover:bg-[#ff8533] transition-colors"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => router.push(`/dashboard/session/${session.id}`)}
+                className="px-6 py-3 bg-white/10 text-white rounded-lg font-medium hover:bg-white/20 transition-colors"
+              >
+                Back to Session
+              </button>
+            </div>
+          </div>
+        </Section>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 pb-12">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <QuestionProgress
-          current={currentQuestionIndex + 1}
-          total={questions.length}
-          score={calculateScore()}
-        />
-
-        <div className="bg-white rounded-xl shadow-sm p-8 mb-8">
-          <h2 className="text-xl font-bold mb-6">{currentQuestion.text}</h2>
-
-          <div className="space-y-4">
-            {currentQuestion.choices.map((choice, index) => (
-              <ChoiceButton
-                key={index}
-                choice={choice}
-                onClick={() => handleAnswerSelect(index)}
-                status={
-                  hasAnswered
-                    ? index === currentQuestion.correctAnswer
-                      ? "success"
-                      : index === selectedAnswers[currentQuestionIndex]
-                      ? "error"
-                      : "default"
-                    : "default"
-                }
-              />
-            ))}
+    <div className="max-w-3xl mx-auto">
+      <Section>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Knowledge Check</h1>
+            <p className="text-white/70">
+              Question {currentQuestion + 1} of {session.questions.length}
+            </p>
           </div>
-
-          <ExplanationAccordion
-            explanation={currentQuestion.explanation}
-            isVisible={showExplanation}
-          />
+          <div className="bg-white/10 px-4 py-2 rounded-lg">
+            <span className="text-white/70">Score: </span>
+            <span className="text-white font-medium">{score}</span>
+          </div>
         </div>
 
-        <div className="flex justify-between">
-          <button
-            onClick={handlePrevious}
-            disabled={currentQuestionIndex === 0}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-              currentQuestionIndex === 0
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-white text-[#8811f0] hover:bg-gray-50"
-            }`}
-          >
-            Previous
-          </button>
-          {currentQuestionIndex === questions.length - 1 ? (
-            <Link
-              href="/dashboard"
-              className="px-6 py-3 rounded-lg font-medium bg-[#8811f0] text-white hover:bg-[#7700d6] transition-colors"
-            >
-              Finish Test
-            </Link>
-          ) : (
+        <div className="mb-8">
+          <h2 className="text-xl text-white mb-6">
+            {session.questions[currentQuestion].text}
+          </h2>
+          <div className="space-y-4">
+            {session.questions[currentQuestion].options.map((option, index) => (
+              <button
+                key={index}
+                onClick={() => handleAnswerSelect(index)}
+                className={`w-full text-left p-4 rounded-lg border transition-colors ${
+                  selectedAnswer === index
+                    ? showFeedback
+                      ? index ===
+                        session.questions[currentQuestion].correctAnswer
+                        ? "bg-green-500/20 border-green-500"
+                        : "bg-red-500/20 border-red-500"
+                      : "bg-[#ff6b00]/20 border-[#ff6b00]"
+                    : "bg-black/30 border-white/10 hover:border-white/30"
+                } ${
+                  showFeedback &&
+                  index === session.questions[currentQuestion].correctAnswer
+                    ? "bg-green-500/20 border-green-500"
+                    : ""
+                }`}
+              >
+                <span className="text-white">{option}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-end">
+          {showFeedback ? (
             <button
               onClick={handleNext}
-              disabled={!hasAnswered}
-              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                !hasAnswered
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-[#8811f0] text-white hover:bg-[#7700d6]"
-              }`}
+              disabled={selectedAnswer === null}
+              className="px-6 py-3 bg-[#ff6b00] text-white rounded-lg font-medium hover:bg-[#ff8533] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              {currentQuestion === session.questions.length - 1
+                ? "Finish"
+                : "Next"}
+            </button>
+          ) : (
+            <button
+              onClick={handleCheck}
+              disabled={selectedAnswer === null || isSubmitting}
+              className="px-6 py-3 bg-[#ff6b00] text-white rounded-lg font-medium hover:bg-[#ff8533] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? "Checking..." : "Check Answer"}
             </button>
           )}
         </div>
-      </div>
+      </Section>
     </div>
   );
 }

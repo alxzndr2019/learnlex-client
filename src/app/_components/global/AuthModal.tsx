@@ -49,15 +49,15 @@ export default function AuthModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-900/80 backdrop-blur-sm p-6 text-left align-middle shadow-xl transition-all border border-white/10">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-black/80 backdrop-blur-sm p-8 text-left align-middle shadow-xl transition-all border border-white/10">
                 <div className="flex flex-col items-center">
-                  <Dialog.Title className="text-xl font-bold mb-8 text-white">
-                    {mode === "login" ? "Welcome Back" : "Create Account"}
+                  <Dialog.Title className="text-2xl font-bold mb-8 text-white">
+                    {mode === "login" ? "Welcome Back" : "Join LearnLex"}
                   </Dialog.Title>
 
                   <button
                     onClick={handleLogin}
-                    className="w-full flex items-center justify-center gap-3 bg-[#8811f0] hover:bg-[#7700d6] text-white px-6 py-4 rounded-lg font-medium transition-colors"
+                    className="w-full flex items-center justify-center gap-3 bg-[#ff6b00] hover:bg-[#ff8533] text-white px-6 py-4 rounded-lg font-medium transition-colors"
                   >
                     <LogIn className="w-5 h-5" />
                     Continue with Google
@@ -67,14 +67,14 @@ export default function AuthModal({
                     By continuing, you agree to our{" "}
                     <a
                       href="#"
-                      className="font-medium text-[#8811f0] hover:text-[#7700d6]"
+                      className="font-medium text-[#ff6b00] hover:text-[#ff8533]"
                     >
                       Terms of Service
                     </a>{" "}
                     and{" "}
                     <a
                       href="#"
-                      className="font-medium text-[#8811f0] hover:text-[#7700d6]"
+                      className="font-medium text-[#ff6b00] hover:text-[#ff8533]"
                     >
                       Privacy Policy
                     </a>

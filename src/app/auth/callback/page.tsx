@@ -17,7 +17,6 @@ function AuthCallbackContent() {
     const userStr = searchParams.get("user");
 
     if (token && userStr) {
-      localStorage.setItem("token", token);
       try {
         const user = JSON.parse(decodeURIComponent(userStr));
         setUser(user);

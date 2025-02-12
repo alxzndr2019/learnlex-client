@@ -1,30 +1,26 @@
-"use client";
-
-import { DM_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import Header from "./_components/global/Header";
-import Footer from "./_components/global/Footer";
-import { Providers } from "../HOC/Providers";
+import ClientLayout from "./ClientLayout";
+import { Toaster } from "@/components/ui/toaster";
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-dm-sans",
-});
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata = {
+  title: "LearnLex - AI-Powered Learning Platform",
+  description:
+    "Transform any YouTube video into an interactive learning experience",
+};
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className={`${dmSans.className} antialiased`}>
-        <Providers>
-          <Header />
-          {children}
-          <Footer />
-        </Providers>
+      <body className={inter.className}>
+        <ClientLayout>{children}</ClientLayout>
+        <Toaster />
       </body>
     </html>
   );
