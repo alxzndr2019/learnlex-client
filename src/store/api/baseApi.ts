@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { toast } from "@/hooks/use-toast";
 
 // const BASE_URL = "http://localhost:4444/api";
-const BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/api`;
+const BASE_URL = "/api"; // Use relative path instead of full URL
 
 const baseApi = createApi({
   reducerPath: "api",

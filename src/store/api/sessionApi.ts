@@ -23,7 +23,7 @@ export interface Question {
 export const sessionApi = createApi({
   reducerPath: "sessionApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/videos`,
+    baseUrl: "/api/videos",
     credentials: "include",
   }),
   tagTypes: ["Session", "Sessions"],
