@@ -15,7 +15,14 @@ export default function Header() {
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/vercel.svg" alt="Logo" width={32} height={32} />
+            <Image
+              src="/vercel.svg"
+              alt="Logo"
+              width={32}
+              height={32}
+              priority
+              className="w-8 h-8"
+            />
             <span className="font-bold text-xl text-white">LearnLex</span>
           </Link>
 

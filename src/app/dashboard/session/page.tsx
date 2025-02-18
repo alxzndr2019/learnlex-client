@@ -2,21 +2,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import SessionCard from "../_components/SessionCard";
+import dynamic from "next/dynamic";
 import { sessionApi } from "../../../store/api/sessionApi";
+
+const SessionCard = dynamic(() => import("../_components/SessionCard"), {
+  ssr: false,
+});
 
 export default function Sessions() {
   const { data: sessionsData, isLoading } =
     sessionApi.useGetUserSessionsQuery();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"recent" | "progress">("recent");
-
+  console.log(sessionsData);
   const sessions = sessionsData?.sessions || [];
 
   // Filter and sort sessions
   const filteredSessions = sessions
     .filter((session) =>
-      session.title.toLowerCase().includes(searchQuery.toLowerCase())
+      session?.id?.toLowerCase().includes(searchQuery.toLowerCase())
     )
     .sort((a, b) => {
       if (sortBy === "recent") {

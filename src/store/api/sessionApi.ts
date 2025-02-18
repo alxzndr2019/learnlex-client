@@ -1,116 +1,104 @@
-import { baseApi } from "./baseApi";
-import { toast } from "@/hooks/use-toast";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export interface Session {
   id: string;
-  videoId: string;
   title: string;
-  channelTitle: string;
   thumbnailUrl: string;
-  duration: string;
-  status: string;
-  summary: string;
-  keyPoints: string[];
+  channelTitle: string;
+  videoId: string;
   progress: number;
   lastAccessed: string;
+  summary: string;
+  keyPoints: string[];
+  questions: Question[];
 }
 
-interface ProcessVideoRequest {
-  url: string;
-}
-
-interface TestQuestion {
+export interface Question {
   id: string;
   text: string;
   options: string[];
+  correctAnswer: number;
 }
 
-export const sessionApi = baseApi.injectEndpoints({
+export const sessionApi = createApi({
+  reducerPath: "sessionApi",
+  baseQuery: fetchBaseQuery({
+    baseUrl: "http://localhost:4444/api/videos",
+    credentials: "include",
+  }),
+  tagTypes: ["Session", "Sessions"],
   endpoints: (builder) => ({
-    processVideo: builder.mutation<Session, ProcessVideoRequest>({
+    getUserSessions: builder.query<{ sessions: Session[] }, void>({
+      query: () => "/user/sessions",
+      providesTags: ["Sessions"],
+      keepUnusedDataFor: 300, // Cache for 5 minutes
+    }),
+    getSession: builder.query<Session, string>({
+      query: (id) => `/${id}`,
+      providesTags: (result, error, id) => [{ type: "Session", id }],
+      keepUnusedDataFor: 300, // Cache for 5 minutes
+    }),
+    processVideo: builder.mutation<Session, { url: string }>({
       query: (body) => ({
-        url: "videos",
+        url: "sessions",
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Session"],
-      async onQueryStarted(_, { queryFulfilled }) {
-        try {
-          await queryFulfilled;
-          toast({
-            title: "Video Processing Started",
-            description:
-              "Your video is being processed. This may take a few minutes.",
-            variant: "default",
-          });
-        } catch (error) {
-          toast({
-            title: "Processing Failed",
-            description:
-              error instanceof Error
-                ? error.message
-                : "Failed to process video",
-            variant: "destructive",
-          });
-        }
-      },
+      invalidatesTags: ["Sessions"],
     }),
-
-    getSession: builder.query<Session, string>({
-      query: (id) => `/videos/${id}`,
-    }),
-
-    getUserSessions: builder.query<{ sessions: Session[] }, void>({
-      query: () => `/videos/user/sessions`,
-    }),
-
     updateProgress: builder.mutation<
       void,
       { sessionId: string; progress: number }
     >({
       query: ({ sessionId, progress }) => ({
-        url: `/videos/${sessionId}/progress`,
-        method: "POST",
+        url: `sessions/${sessionId}/progress`,
+        method: "PUT",
         body: { progress },
       }),
-    }),
-
-    startTest: builder.mutation<
-      { testId: string; questions: TestQuestion[] },
-      string
-    >({
-      query: (sessionId) => ({
-        url: `/videos/${sessionId}/test`,
-        method: "POST",
-      }),
-    }),
-
-    submitAnswer: builder.mutation<
-      { correct: boolean; explanation: string },
-      { questionId: string; answer: number }
-    >({
-      query: ({ questionId, answer }) => ({
-        url: `/videos/${questionId}/test/answer`,
-        method: "POST",
-        body: { answer },
-      }),
-    }),
-
-    getTestResults: builder.query<
-      {
-        score: number;
-        totalQuestions: number;
-        completedAt: string;
-        answers: Array<{
-          questionId: string;
-          answer: number;
-          isCorrect: boolean;
-        }>;
+      invalidatesTags: (result, error, { sessionId }) => [
+        { type: "Session", id: sessionId },
+        "Sessions",
+      ],
+      // Optimistic update
+      async onQueryStarted(
+        { sessionId, progress },
+        { dispatch, queryFulfilled }
+      ) {
+        const patchResult = dispatch(
+          sessionApi.util.updateQueryData("getSession", sessionId, (draft) => {
+            if (draft) {
+              draft.progress = progress;
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
       },
-      string
+    }),
+    startTest: builder.mutation<void, string>({
+      query: (sessionId) => ({
+        url: `sessions/${sessionId}/test`,
+        method: "POST",
+      }),
+      invalidatesTags: (result, error, sessionId) => [
+        { type: "Session", id: sessionId },
+      ],
+    }),
+    submitAnswer: builder.mutation<
+      { correct: boolean },
+      { sessionId: string; body: { questionId: string; answer: number } }
     >({
-      query: (sessionId) => `/videos/${sessionId}/test/results`,
+      query: ({ sessionId, body }) => ({
+        url: `sessions/${sessionId}/answer`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (result, error, { sessionId }) => [
+        { type: "Session", id: sessionId },
+      ],
     }),
   }),
-  overrideExisting: false,
 });

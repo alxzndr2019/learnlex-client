@@ -3,10 +3,13 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import Section from "../../_components/Section";
-import { sessionApi } from "../../../../store/api/sessionApi";
 import dynamic from "next/dynamic";
+import { sessionApi } from "../../../../store/api/sessionApi";
 import type { YouTubeProps, YouTubeEvent, YouTubePlayer } from "react-youtube";
+
+const Section = dynamic(() => import("../../_components/Section"), {
+  ssr: false,
+});
 
 // Dynamically import YouTube component with no SSR
 const YouTube = dynamic<YouTubeProps>(
@@ -82,7 +85,7 @@ const VideoMetadata = ({
   videoId,
   onProgress,
 }: {
-  thumbnail: string;
+  thumbnail: string | null;
   title: string;
   channel: string;
   videoId: string;
@@ -96,7 +99,12 @@ const VideoMetadata = ({
         <VideoPlayer videoId={videoId} title={title} onProgress={onProgress} />
       ) : (
         <div className="relative aspect-video rounded-lg overflow-hidden">
-          <Image src={thumbnail} alt={title} fill className="object-cover" />
+          <Image
+            src={thumbnail || "/placeholder.png"}
+            alt={title}
+            fill
+            className="object-cover"
+          />
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
             <button
               className="bg-white/90 p-4 rounded-full"

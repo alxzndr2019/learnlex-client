@@ -1,20 +1,37 @@
 "use client";
 
-import StatCard from "./_components/StatCard";
-import SessionCard from "./_components/SessionCard";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import { sessionApi } from "../../store/api/sessionApi";
 import { tokenApi } from "../../store/api/tokenApi";
 import { authApi } from "../../store/api/authApi";
 
+const StatCard = dynamic(() => import("./_components/StatCard"), {
+  ssr: false,
+});
+
+const SessionCard = dynamic(() => import("./_components/SessionCard"), {
+  ssr: false,
+});
+
 export default function Dashboard() {
+  const [mounted, setMounted] = useState(false);
   const { data: sessionsData, isLoading: sessionsLoading } =
     sessionApi.useGetUserSessionsQuery();
   const { data: tokenData, isLoading: tokenLoading } =
     tokenApi.useGetBalanceQuery();
   const { data: user } = authApi.useGetCurrentUserQuery();
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const sessions = sessionsData?.sessions || [];
+
+  if (!mounted) {
+    return null;
+  }
 
   if (sessionsLoading || tokenLoading) {
     return (

@@ -1,5 +1,6 @@
 import { baseApi } from "./baseApi";
 import { toast } from "@/hooks/use-toast";
+import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 
 interface User {
   id: string;
@@ -22,11 +23,13 @@ export const authApi = baseApi.injectEndpoints({
             description: `Logged in as ${data.name}`,
             variant: "default",
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const err = error as FetchBaseQueryError;
           toast({
             title: "Authentication Error",
             description:
-              error.error?.data?.error || "Failed to get user information",
+              (err.data as { error: string })?.error ||
+              "Failed to get user information",
             variant: "destructive",
           });
         }

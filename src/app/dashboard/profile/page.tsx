@@ -1,7 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import Section from "../_components/Section";
+import dynamic from "next/dynamic";
+
+const Section = dynamic(() => import("../_components/Section"), {
+  ssr: false,
+});
 
 const AvatarUpload = () => {
   return (

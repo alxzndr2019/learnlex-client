@@ -24,7 +24,10 @@ const enhancedBaseApi = baseApi.enhanceEndpoints({
   endpoints: {
     // Enhance mutations
     mutation: {
-      async onQueryStarted(_, { queryFulfilled }) {
+      async onQueryStarted(
+        _: unknown,
+        { queryFulfilled }: { queryFulfilled: Promise<unknown> }
+      ) {
         try {
           await queryFulfilled;
           toast({
@@ -32,10 +35,11 @@ const enhancedBaseApi = baseApi.enhanceEndpoints({
             description: "Operation completed successfully",
             variant: "default",
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const err = error as { error: { data: { error: string } } };
           toast({
             title: "Error",
-            description: error.error?.data?.error || "An error occurred",
+            description: err.error?.data?.error || "An error occurred",
             variant: "destructive",
           });
         }
@@ -43,13 +47,17 @@ const enhancedBaseApi = baseApi.enhanceEndpoints({
     },
     // Enhance queries
     query: {
-      async onQueryStarted(_, { queryFulfilled }) {
+      async onQueryStarted(
+        _: unknown,
+        { queryFulfilled }: { queryFulfilled: Promise<unknown> }
+      ) {
         try {
           await queryFulfilled;
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const err = error as { error: { data: { error: string } } };
           toast({
             title: "Error",
-            description: error.error?.data?.error || "Failed to fetch data",
+            description: err.error?.data?.error || "Failed to fetch data",
             variant: "destructive",
           });
         }

@@ -2,8 +2,12 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Section from "../../../_components/Section";
+import dynamic from "next/dynamic";
 import { sessionApi } from "../../../../../store/api/sessionApi";
+
+const Section = dynamic(() => import("../../../_components/Section"), {
+  ssr: false,
+});
 
 export default function TestPage() {
   const params = useParams();
@@ -14,12 +18,12 @@ export default function TestPage() {
   const [score, setScore] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
 
-  const { data: testResults } = sessionApi.useGetTestResultsQuery(
-    params.id as string,
-    {
-      skip: !isComplete,
-    }
-  );
+  // const { data: testResults } = sessionApi.useGetTestResultsQuery(
+  //   params.id as string,
+  //   {
+  //     skip: !isComplete,
+  //   }
+  // );
 
   const [submitAnswer, { isLoading: isSubmitting }] =
     sessionApi.useSubmitAnswerMutation();

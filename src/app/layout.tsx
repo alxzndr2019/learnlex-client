@@ -1,14 +1,13 @@
+import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import ClientLayout from "./ClientLayout";
-import { Toaster } from "@/components/ui/toaster";
+import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
-  title: "LearnLex - AI-Powered Learning Platform",
-  description:
-    "Transform any YouTube video into an interactive learning experience",
+export const metadata: Metadata = {
+  title: "LearnLex",
+  description: "AI-powered video learning platform",
 };
 
 export default function RootLayout({
@@ -19,8 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ClientLayout>{children}</ClientLayout>
-        <Toaster />
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

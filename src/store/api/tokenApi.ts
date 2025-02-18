@@ -36,11 +36,12 @@ export const tokenApi = baseApi.injectEndpoints({
               variant: "destructive",
             });
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const err = error as { error: { data: { error: string } } };
           toast({
             title: "Error",
             description:
-              error.error?.data?.error || "Failed to fetch token balance",
+              err.error?.data?.error || "Failed to fetch token balance",
             variant: "destructive",
           });
         }
@@ -65,11 +66,11 @@ export const tokenApi = baseApi.injectEndpoints({
             description: `Successfully purchased ${amount} tokens. New balance: ${data.newBalance} tokens`,
             variant: "default",
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const err = error as { error: { data: { error: string } } };
           toast({
             title: "Purchase Failed",
-            description:
-              error.error?.data?.error || "Failed to purchase tokens",
+            description: err.error?.data?.error || "Failed to purchase tokens",
             variant: "destructive",
           });
         }
