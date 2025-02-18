@@ -36,13 +36,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     // Check for token in localStorage
     const token = localStorage.getItem("token");
     if (token) {
-      fetchUser(token);
+      fetchUser();
     } else {
       setLoading(false);
     }
   }, []);
 
-  const fetchUser = async (token: string) => {
+  const fetchUser = async () => {
     try {
       const response = await fetch("/api/auth/me", {
         credentials: "include",
