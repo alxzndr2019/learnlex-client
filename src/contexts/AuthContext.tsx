@@ -44,11 +44,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const fetchUser = async (token: string) => {
     try {
-      const response = await fetch("http://localhost:4444/api/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
@@ -64,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const login = () => {
-    window.location.href = "http://localhost:4444/api/auth/google";
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
   };
 
   const logout = () => {
